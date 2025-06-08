@@ -25,7 +25,7 @@ def render_template(template_str, data):
 		data["politedissent"]["text"] = text_list
 
 	if "housemdguide" in data:
-		data["converter"] = {"patient": "Patient", 'involvment': "Origin of the Case", 'ethics': "Ethics", 'steps': "Steps taken to Diagnose", 'diagnosis': "Diagnosis", 'diagnosis_origin': "Origin of the diagnosis", 'additional': "Additional Information"}
+		data["converter"] = {"patient": "Patient", "clinic_patients": "Clinic Patients", 'involvment': "Origin of the Case", 'ethics': "Ethics", 'steps': "Steps taken to Diagnose", 'diagnosis': "Diagnosis", 'diagnosis_origin': "Origin of the diagnosis", 'additional': "Additional Information"}
 
 	template = Template(template_str)
 	return template.render(data)
