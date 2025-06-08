@@ -30,7 +30,7 @@
 		<section id="search-filters">
 			<div id="season" class="mb-4">
 				<h2 class="text-xl font-bold">Season</h2>
-				<ul id="season-list" class="flex flex-row flex-wrap gap-2 items-center justify-left"></ul>
+				<ul id="seasons-list" class="flex flex-row flex-wrap gap-2 items-center justify-left"></ul>
 			</div>
 			<div id="cast" class="mb-4">
 				<h2 class="text-xl font-bold">Characters</h2>
@@ -116,6 +116,9 @@
 				e.classList.remove("bg-blue-500");
 				e.classList.remove("text-white");
 			});
+
+			// Remove all url params
+			history.replaceState(null, '', window.location.pathname + window.location.hash);
 		}
 
 		function filter_episodes() {
@@ -261,17 +264,31 @@
 			return arr;
 		}
 
+		function updateUrlParams(key, value, del = false) {
+			const url = new URL(window.location.href);
+
+			if (del) {
+				url.searchParams.delete(key, value);
+			} else {
+				url.searchParams.append(key, value);
+			}
+
+			history.replaceState(null, '', url);
+		}
+
 		function filter_by(e, list, element) {
 			if (e.target.classList.contains("bg-gray-200")) {
 				current_filters[list].push(element);
 				e.target.classList.remove("bg-gray-200");
 				e.target.classList.add("bg-blue-500");
 				e.target.classList.add("text-white");
+				updateUrlParams(list, element)
 			} else {
 				removeItemAll(current_filters[list], element);
 				e.target.classList.add("bg-gray-200");
 				e.target.classList.remove("bg-blue-500");
 				e.target.classList.remove("text-white");
+				updateUrlParams(list, element, true)
 			}
 		}
 
@@ -306,7 +323,7 @@
 		}
 
 		function setup_filters() {
-			setup_filter_list([1, 2, 3, 4, 5, 6, 7, 8], "season-list", "seasons");
+			setup_filter_list([1, 2, 3, 4, 5, 6, 7, 8], "seasons-list", "seasons");
 			setup_filter_list([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "zebras-list", "zebras");
 			setup_filter_list(filters.cast, "cast-list", "cast", fixed_width = false);
 			setup_filter_list(filters.directors, "directors-list", "directors", fixed_width = false);
