@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>S{{ season }}E{{ episode }} "{{ title }}" - House, M.D. Search Engine</title>
+	<link rel="icon" href="assets/favicon.webp">
+	<script src="https://tinylytics.app/embed/z4NvPrkWSyKNaBznMxiX.js" defer></script>
+
+	<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+	<style>
+		blockquote {
+			border-left: 4px solid #ccc;
+			padding: 10px 20px;
+			margin: 10px 0 10px 0;
+			background-color: #f9f9f9;
+			quotes: "“" "”" "‘" "’";
+		}
+
+		blockquote > p {
+			padding-top: 5px;
+			padding-bottom: 5px;
+		}
+
+		#fandom-text p {
+			padding-top: 5px;
+			padding-bottom: 5px;
+		}
+
+		a:not(.filter) {
+			color: var(--color-blue-700);
+			text-decoration: underline;
+		}
+
+		h3 {
+			font-weight: bold;
+		}
+		ol { list-style-type: decimal; padding-left: calc(var(--spacing) * 7);}
+		ul { list-style-type: disc; padding-left: calc(var(--spacing) * 4); }
+	</style>
+</head>
+<body class="font-sans flex flex-col min-h-screen">
+	<!-- Title Bar -->
+	<header class="bg-white shadow">
+        <nav class="container mx-auto p-4 flex justify-between items-center">
+			<div><a href="/"><img class="h-8 w-8" src="/assets/favicon.webp"/></a></div>
+            <div class="text-lg font-bold">House M.D. Search Engine</div>
+            <div class="text-lg"><a href="/about.html">About</a></div>
+        </nav>
+    </header>
+
+	<!-- Content -->
+	<main class="flex-grow container mx-auto p-6 text-gray-800 md:w-4/6">
+		<h1 class="text-3xl text-black font-bold mb-12">S{{ season }}E{{ episode }} - "{{ title }}"</h1>
+		<!-- General Data (director, etc...)-->
+		<section class="text-black mb-12">
+			<div id="metadata" class="mb-4 flex flex-row flex-wrap gap-2 items-center justify-left">
+				<a href="/?zebras={{ zebra_factor | split: "/" | first | url_encode }}" class="filter cursor-pointer bg-blue-50 rounded-md p-2">Zebra Factor <span class="font-bold" id="zebra">{{ zebra_factor }}</span></a>
+				<div class="bg-gray-100 rounded-md p-2">Final Diagnosis <span class="font-bold" id="diagnosis">{{ final_diagnosis }}</span></div>
+
+				{% for bodypart in bodyparts %}
+					<a href="/?bodyparts={{ bodypart | url_encode }}" class="filter cursor-pointer bg-blue-50 rounded-md p-2">Bodypart <span class="font-bold">{{ bodypart | capitalize }}</span></a>
+				{% endfor %}
+				{% for field in fields %}
+					<a href="/?fields={{ field | url_encode }}" class="filter cursor-pointer bg-blue-50 rounded-md p-2">Field <span class="font-bold">{{ field | capitalize }}</span></a>
+				{% endfor %}
+			</div>
+			<div id="metadata" class="mb-4 flex flex-row flex-wrap gap-2 items-center justify-left">
+				<a href="/?directors={{ director | url_encode }}" class="filter cursor-pointer bg-blue-50 rounded-md p-2">Directed by <span class="font-bold" id="director">{{ director }}</span></a>
+				<a href="/?writers={{ writer | url_encode }}" class="filter cursor-pointer bg-blue-50 rounded-md p-2">Written by <span class="font-bold" id="writer">{{ writer }}</span></a>
+				<div class="bg-gray-100 rounded-md p-2">Aired on <span class="font-bold" id="airdate">{{ airdate | date: "%b %d, %Y" }}</span></div>
+				<div class="bg-gray-100 rounded-md p-2">Rating <span class="font-bold" id="rating">{{ rating }}</span></div>
+				{% if guest_star %}<div class="bg-gray-100 rounded-md p-2">Guest Star <span class="font-bold" id="guest_star">{{ guest_star }}</span></div>{% endif %}
+			</div>
+		</section>
+
+		<section id="major-events" class="mb-12">
+			<h2 class="text-2xl text-black font-bold">Major Events</h2>
+			<ol id="major_events" class="list-decimal pl-8">
+				{% for event in major_events -%}
+					<li>{{ event }}</li>
+				{%- endfor %}
+			</ol>
+		</section>
+
+		<!-- Polite Dissent Text & Nitpicks -->
+		<section id="politedissent" class="mb-12">
+			<h1 class="text-2xl text-black font-bold">From Polite Dissent</h1>
+			{% if politedissent %}
+				<p class="font-light text-gray-600 mb-2">See the <a class="cursor-pointer" href="{{ politedissent.link }}">politedissent article</a>.</p>
+			{% else %}
+				<p class="font-light text-gray-600 mb-2">See <a class="cursor-pointer" href="https://web.archive.org/web/20140531021147/https://www.politedissent.com/house_pd.html">politedissent</a>.</p>
+			{% endif %}
+
+			{% for element in politedissent["complaints"] -%}
+    			{% assign complaint_length = element[1] | size %}
+				{% if complaint_length >= 1 %}
+					<div id="{{ element[0] }}-complaints">
+						<h2 class="text-xl text-black font-bold mb-2">{{ element[0] | capitalize }}:</h2>
+						<ul class="list-disc pl-5">
+							{% for complaint in element[1] -%}
+								<li>{{ complaint }}</li>
+							{%- endfor %}
+						</ul>
+					</div>
+				{% endif %}
+			{% endfor %}
+		</section>
+
+		<!-- House M.D. Guide -->
+		{% if housemdguide %}
+			<section id="housemdguide" class="mb-12">
+				<h1 class="text-2xl text-black font-bold">From House M.D. Guide</h1>
+				<p class="font-light text-gray-600 mb-2">See the <a class="cursor-pointer" href="{{ housemdguide.link }}">House, M.D. Guide article</a>.</p>
+
+				{% for element in housemdguide -%}
+					{% if element[0] != "link" %}
+						<section class="mb-2">
+							<h2 class="text-xl text-black font-bold">{{ converter[element[0]] }}</h2>
+							{% if element[1].first %}
+								<ul class="list-disc pl-7">
+									{% for li in element[1] -%}
+										<li>{{ li }}</li>
+									{% endfor %}
+								</ul>
+							{% else %}
+								<div>{{ element[1] }}</div>
+							{% endif %}
+						</section>
+					{% endif %}
+				{% endfor %}
+			</section>
+		{% endif %}
+
+		<!-- Fandom Text -->
+		<section id="fandom-text" class="mb-12">
+			<h1 class="text-2xl text-black font-bold">From House Fandom</h1>
+			<p class="font-light text-gray-600 mb-2">See the <a class="cursor-pointer" href="{{ link }}">fandom article</a>.</p>
+
+			{% for element in text -%}
+				<section class="mb-2">
+					<h2 class="text-xl text-black font-bold">{{ element[0] }}</h2>
+					<div>{{ element[1] }}</div>
+				</section>
+			{%- endfor %}
+
+			<section class="mb-2 mt-8">
+				<h1 class="text-2xl text-black font-bold mb-2">Cast</h1>
+				<div class="mb-4 flex flex-row flex-wrap gap-2 items-center justify-left" id="cast">
+					{% for element in cast -%}
+						<a href="/?cast={{ element['character'] | url_encode }}" class="filter cursor-pointer bg-blue-50 rounded-md p-2"><span class="actor">{{ element["actor"] }}</span> as <span class="character font-bold">{{ element["character"] }}</span></a>
+					{%- endfor %}
+				</div>
+			</section>
+		</section>
+	</main>
+
+	<!-- Footer with Attribution -->
+	<footer class="bg-white mt-6 p-4 shadow">
+        <div class="container mx-auto text-center">
+            <p class="text-gray-600">Content from <a class="cursor-pointer text-blue-700 underline" href="https://house.fandom.com">house.fandom.com</a> is licensed under <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>.</p>
+			<p class="text-gray-600">Content from <a class="cursor-pointer text-blue-700 underline" href="https://politedissent.com">politedissent.com</a> is property of the website's owner.</p>
+        </div>
+    </footer>
+</body>
+</html>
