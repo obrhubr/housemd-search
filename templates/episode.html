@@ -55,8 +55,22 @@
 		<!-- General Data (director, etc...)-->
 		<section class="text-black mb-12">
 			<div id="metadata" class="mb-4 flex flex-row flex-wrap gap-2 items-center justify-left">
-				<a href="/?zebras={{ zebra_factor | split: "/" | first | url_encode }}" class="filter cursor-pointer bg-blue-50 rounded-md p-2">Zebra Factor <span class="font-bold" id="zebra">{{ zebra_factor }}</span></a>
-				<div class="bg-gray-100 rounded-md p-2">Final Diagnosis <span class="font-bold" id="diagnosis">{{ final_diagnosis }}</span></div>
+
+				{% if zebra_factor.first %}
+					{% for zebra in zebra_factor %}
+						<a href="/?zebras={{ zebra | split: "/" | first | url_encode }}" class="filter cursor-pointer bg-blue-50 rounded-md p-2">Zebra Factor <span class="font-bold" id="zebra">{{ zebra }}</span></a>
+					{% endfor %}
+				{% else %}
+					<a href="/?zebras={{ zebra_factor | split: "/" | first | url_encode }}" class="filter cursor-pointer bg-blue-50 rounded-md p-2">Zebra Factor <span class="font-bold" id="zebra">{{ zebra_factor }}</span></a>
+				{% endif %}
+
+				{% if final_diagnosis.first %}
+					{% for diagnosis in final_diagnosis %}
+						<div class="bg-gray-100 rounded-md p-2">Final Diagnosis <span class="font-bold" id="diagnosis">{{ diagnosis }}</span></div>
+					{% endfor %}
+				{% else %}
+					<div class="bg-gray-100 rounded-md p-2">Final Diagnosis <span class="font-bold" id="diagnosis">{{ final_diagnosis }}</span></div>
+				{% endif %}
 
 				{% for bodypart in bodyparts %}
 					<a href="/?bodyparts={{ bodypart | url_encode }}" class="filter cursor-pointer bg-blue-50 rounded-md p-2">Bodypart <span class="font-bold">{{ bodypart | capitalize }}</span></a>
@@ -67,10 +81,26 @@
 			</div>
 			<div id="metadata" class="mb-4 flex flex-row flex-wrap gap-2 items-center justify-left">
 				<a href="/?directors={{ director | url_encode }}" class="filter cursor-pointer bg-blue-50 rounded-md p-2">Directed by <span class="font-bold" id="director">{{ director }}</span></a>
-				<a href="/?writers={{ writer | url_encode }}" class="filter cursor-pointer bg-blue-50 rounded-md p-2">Written by <span class="font-bold" id="writer">{{ writer }}</span></a>
+
+
+				{% if writer.first %}
+					{% for w in writer %}
+						<a href="/?writers={{ w | url_encode }}" class="filter cursor-pointer bg-blue-50 rounded-md p-2">Written by <span class="font-bold" id="writer">{{ w }}</span></a>
+					{% endfor %}
+				{% else %}
+					<a href="/?writers={{ writer | url_encode }}" class="filter cursor-pointer bg-blue-50 rounded-md p-2">Written by <span class="font-bold" id="writer">{{ writer }}</span></a>
+				{% endif %}
+
 				<div class="bg-gray-100 rounded-md p-2">Aired on <span class="font-bold" id="airdate">{{ airdate | date: "%b %d, %Y" }}</span></div>
 				<div class="bg-gray-100 rounded-md p-2">Rating <span class="font-bold" id="rating">{{ rating }}</span></div>
-				{% if guest_star %}<div class="bg-gray-100 rounded-md p-2">Guest Star <span class="font-bold" id="guest_star">{{ guest_star }}</span></div>{% endif %}
+
+				{% if guest_stars.first %}
+					{% for guest in guest_stars %}
+						<div class="bg-gray-100 rounded-md p-2">Guest Star <span class="font-bold" id="guest_star">{{ guest }}</span></div>
+					{% endfor %}
+				{% else %}
+					<div class="bg-gray-100 rounded-md p-2">Guest Star <span class="font-bold" id="guest_star">{{ guest_stars }}</span></div>
+				{% endif %}
 			</div>
 		</section>
 
@@ -87,9 +117,9 @@
 		<section id="politedissent" class="mb-12">
 			<h1 class="text-2xl text-black font-bold">From Polite Dissent</h1>
 			{% if politedissent %}
-				<p class="font-light text-gray-600 mb-2">See the <a class="cursor-pointer" href="{{ politedissent.link }}">politedissent article</a>.</p>
+				<p class="font-light text-gray-600 mb-2">See the <a target="_blank" class="cursor-pointer" href="{{ politedissent.link }}">politedissent article</a>.</p>
 			{% else %}
-				<p class="font-light text-gray-600 mb-2">See <a class="cursor-pointer" href="https://web.archive.org/web/20140531021147/https://www.politedissent.com/house_pd.html">politedissent</a>.</p>
+				<p class="font-light text-gray-600 mb-2">See <a target="_blank" class="cursor-pointer" href="https://web.archive.org/web/20140531021147/https://www.politedissent.com/house_pd.html">politedissent</a>.</p>
 			{% endif %}
 
 			{% for element in politedissent["complaints"] -%}
@@ -111,7 +141,7 @@
 		{% if housemdguide %}
 			<section id="housemdguide" class="mb-12">
 				<h1 class="text-2xl text-black font-bold">From House M.D. Guide</h1>
-				<p class="font-light text-gray-600 mb-2">See the <a class="cursor-pointer" href="{{ housemdguide.link }}">House, M.D. Guide article</a>.</p>
+				<p class="font-light text-gray-600 mb-2">See the <a target="_blank" class="cursor-pointer" href="{{ housemdguide.link }}">House, M.D. Guide article</a>.</p>
 
 				{% for element in housemdguide -%}
 					{% if element[0] != "link" %}
@@ -135,7 +165,7 @@
 		<!-- Fandom Text -->
 		<section id="fandom-text" class="mb-12">
 			<h1 class="text-2xl text-black font-bold">From House Fandom</h1>
-			<p class="font-light text-gray-600 mb-2">See the <a class="cursor-pointer" href="{{ link }}">fandom article</a>.</p>
+			<p class="font-light text-gray-600 mb-2">See the <a target="_blank" class="cursor-pointer" href="{{ link }}">fandom article</a>.</p>
 
 			{% for element in text -%}
 				<section class="mb-2">
@@ -158,9 +188,9 @@
 	<!-- Footer with Attribution -->
 	<footer class="bg-white mt-6 p-4 shadow">
         <div class="container mx-auto text-center">
-            <p class="text-gray-600">Content from <a class="cursor-pointer text-blue-700 underline" href="https://house.fandom.com">house.fandom.com</a> is licensed under <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>.</p>
-			<p class="text-gray-600">Content from <a class="cursor-pointer text-blue-700 underline" href="https://politedissent.com">politedissent.com</a> is property of the website's owner.</p>
-			<p class="text-gray-600">Content from <a class="cursor-pointer text-blue-700 underline" href="https://politedissent.com">housemd-guide.com</a> is property of the website's owner.</p>
+            <p class="text-gray-600">Content from <a target="_blank" class="cursor-pointer text-blue-700 underline" href="https://house.fandom.com">house.fandom.com</a> is licensed under <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>.</p>
+			<p class="text-gray-600">Content from <a target="_blank" class="cursor-pointer text-blue-700 underline" href="https://politedissent.com">politedissent.com</a> is property of the website's owner.</p>
+			<p class="text-gray-600">Content from <a target="_blank" class="cursor-pointer text-blue-700 underline" href="https://politedissent.com">housemd-guide.com</a> is property of the website's owner.</p>
         </div>
     </footer>
 </body>

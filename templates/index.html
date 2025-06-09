@@ -136,9 +136,10 @@
 				let filter_col = filter_to_index[filter_type];
 				let to_filter = index[filter_col];
 
-				if (["cast", "bodypart", "field"].indexOf(filter_col) > -1) {
-					episodes.forEach((idx) => {
-						let elements = to_filter[idx];
+				episodes.forEach((idx) => {
+					let elements = to_filter[idx];
+
+					if (elements && elements.constructor === Array) {
 						let intersection = [];
 						if (filter_col == "cast") {
 							// Must contain all elements (AND)
@@ -149,15 +150,14 @@
 							intersection = elements.filter(el => filter_values.includes(el));
 							if (intersection.length > 0) filtered.push(idx);
 						}
-					});
-				} else {
-					episodes.forEach((idx) => {
-						let val = to_filter[idx];
-						if (filter_values.indexOf(val) > -1) filtered.push(idx);
-					});
-				};
+					} else {
+						if (filter_values.indexOf(elements) > -1) filtered.push(idx);
+					};
+				});
 
-				episodes = episodes.filter(value => filtered.includes(value));
+				// Since only the subset of still valid episodes was filtered
+				// We can simply swap
+				episodes = filtered;
 			};
 
 			return episodes;
@@ -325,7 +325,7 @@
 
 		function setup_filters() {
 			setup_filter_list([1, 2, 3, 4, 5, 6, 7, 8], "seasons-list", "seasons");
-			setup_filter_list([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "zebras-list", "zebras");
+			setup_filter_list([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "zebras-list", "zebras");
 			setup_filter_list(filters.cast, "cast-list", "cast", fixed_width = false);
 			setup_filter_list(filters.directors, "directors-list", "directors", fixed_width = false);
 			setup_filter_list(filters.writers, "writers-list", "writers", fixed_width = false);
