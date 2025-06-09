@@ -345,10 +345,10 @@
 			let season_elements = [];
 			for (let season = 1; season <= 8; season++) {
 				let season_element = document.createElement("div");
-				season_element.className = "flex flex-row flex-wrap justify-left items-center";
-				season_element.innerHTML = `<div class="mr-1">S${season}</div><div class="justify-left items-center" id="season-${season}"></div>`;-
+				season_element.className = "flex flex-row flex-nowrap justify-left items-center my-1";
+				season_element.innerHTML = `<div class="mr-2 text-center align-center">S${season}</div><div class="flex flex-row flex-wrap justify-left items-center md:gap-1 gap-0.5" id="season-${season}"></div>`;
 				heatmap.appendChild(season_element);
-				season_elements.push(season_element);
+				season_elements.push(document.getElementById(`season-${season}`));
 			};
 
 			for (idx in index.season) {
@@ -358,7 +358,7 @@
 				let episode_element = document.createElement("a");
 				episode_element.href = `./episodes/s${season}e${episode}.html`;
 				episode_element.title = `S${season}E${episode} - "${index.title[idx]}"`;
-				episode_element.className = `cursor-pointer hover:bg-blue-500 bg-green-400 w-3 h-3 mr-0.5 md:w-5 md:h-5 md:mx-0.5 rounded-md heatmap-square`;
+				episode_element.className = `cursor-pointer hover:bg-blue-500 bg-green-400 w-3 h-3 md:w-5 md:h-5 rounded-sm md:rounded-md heatmap-square`;
 				episode_element.id = `heatmap-${idx}`;
 
 				season_elements[season - 1].appendChild(episode_element);
