@@ -396,7 +396,7 @@
 
 				let production = document.createElement("p");
 				production.classList = "mb-2";
-				production.innerHTML = `Director: <span class="font-bold">${index.director[ep]}</span> - Writer <span class="font-bold">${index.writer[ep]}</span> - Aired on: <span class="font-bold">${airdate}</span>`;
+				production.innerHTML = `Director: <span class="font-bold">${index.director[ep]}</span> - Writer <span class="font-bold">${index.writer[ep].constructor === String ? index.writer[ep] : index.writer[ep].join(', ')}</span> - Aired on: <span class="font-bold">${airdate}</span>`;
 				info.appendChild(production);
 
 				let diagnosis = document.createElement("p");
