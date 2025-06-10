@@ -26,7 +26,18 @@
     </header>
 
 	<main class="flex-grow container mx-auto p-6 md:w-4/6">
-		<h1 class="text-2xl mb-4 font-bold">Filter Episodes</h1>
+		<h1 class="text-2xl mb-4 font-bold">Search & Filter Episodes</h1>
+
+		<!-- Search Bar -->
+		<section class="mb-6">
+			<div class="mb-4">
+				<label for="search-input" class="block text-lg font-bold mb-2">Search Text</label>
+				<input type="text" id="search-input" placeholder="Search episodes, diagnoses, medical content..."
+					   class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+			</div>
+			<div id="search-results-count" class="text-sm text-gray-600 hidden"></div>
+		</section>
+
 		<section id="search-filters">
 			<div id="season" class="mb-4">
 				<h2 class="text-xl font-bold">Season</h2>
@@ -62,8 +73,8 @@
 				</div>
 			</div>
 			<div class="mt-4 flex flex-row gap-5">
-				<div id="filter-button" class="bg-blue-500 text-white p-2 cursor-pointer w-20 flex items-center justify-center rounded-md">Search</div>
-				<div id="reset-button" class="bg-red-500 text-white p-2 cursor-pointer w-20 flex items-center justify-center rounded-md">Reset</div>
+				<div id="filter-button" class="bg-blue-500 text-white p-2 cursor-pointer w-20 flex items-center justify-center rounded-md hover:bg-blue-600">Search</div>
+				<div id="reset-button" class="bg-red-500 text-white p-2 cursor-pointer w-20 flex items-center justify-center rounded-md hover:bg-red-600">Reset</div>
 			</div>
 		</section>
 
@@ -101,6 +112,40 @@
 			bodyparts: [],
 		};
 
+		let current_search = "";
+		let episodeData = {};
+
+		// Field name mapping for display
+		const fieldDisplayNames = {
+			'title': 'Title',
+			'director': 'Director',
+			'writer': 'Writer',
+			'guest_stars': 'Guest Stars',
+			'final_diagnosis': 'Final Diagnosis',
+			'cast': 'Cast',
+			'text.Summary': 'Episode Summary',
+			'text.Recap': 'Episode Recap',
+			'text.Clinic Patient': 'Clinic Patient',
+			'text.Zebra Factor 10/10': 'Medical Accuracy',
+			'text.Trivia & Cultural References': 'Trivia & References',
+			'politedissent.Main Content': 'Medical Review',
+			'complaint.big': 'Major Medical Issues',
+			'complaint.medium': 'Medical Issues',
+			'complaint.nitpicks': 'Minor Medical Issues',
+			'housemdguide.patient': 'Patient',
+			'housemdguide.involvment': 'Case Origin',
+			'housemdguide.steps': 'Diagnostic Steps',
+			'housemdguide.diagnosis': 'Diagnosis',
+			'housemdguide.diagnosis_origin': 'Diagnosis Origin',
+			'housemdguide.additional': 'Additional Notes',
+			'major_events': 'Major Events',
+			'quotes': 'Quotes'
+		};
+
+		function getDisplayName(fieldName) {
+			return fieldDisplayNames[fieldName] || fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
+		}
+
 		const filter_to_index = {
 			"seasons": "season",
 			"zebras": "zebra_factor",
@@ -122,11 +167,153 @@
 			history.replaceState(null, '', window.location.pathname + window.location.hash);
 		}
 
+		function searchEpisodes(searchTerm) {
+			if (!searchTerm.trim()) return [];
+
+			const searchResults = [];
+			const searchLower = searchTerm.toLowerCase();
+
+			for (const [seasonKey, seasonData] of Object.entries(episodeData)) {
+				for (const [episodeKey, episode] of Object.entries(seasonData)) {
+					const matches = [];
+
+					// Search basic fields
+					const basicFields = ['title', 'director', 'writer', 'guest_stars', 'final_diagnosis'];
+					basicFields.forEach(field => {
+						if (episode[field] && typeof episode[field] === 'string' && episode[field].toLowerCase().includes(searchLower)) {
+							matches.push({field, content: episode[field], type: 'basic'});
+						}
+					});
+
+					// Search cast
+					if (episode.cast && Array.isArray(episode.cast)) {
+						episode.cast.forEach(member => {
+							if ((member.actor && typeof member.actor === 'string' && member.actor.toLowerCase().includes(searchLower)) ||
+								(member.character && typeof member.character === 'string' && member.character.toLowerCase().includes(searchLower))) {
+								matches.push({field: 'cast', content: `${member.actor || ''} as ${member.character || ''}`, type: 'cast'});
+							}
+						});
+					}
+
+					// Search text content
+					if (episode.text && typeof episode.text === 'object') {
+						Object.entries(episode.text).forEach(([key, value]) => {
+							if (value && typeof value === 'string' && value.toLowerCase().includes(searchLower)) {
+								const snippet = extractSnippet(value, searchLower);
+								matches.push({field: `text.${key}`, content: snippet, type: 'text'});
+							}
+						});
+					}
+
+					// Search politedissent content
+					if (episode.politedissent?.text && Array.isArray(episode.politedissent.text)) {
+						episode.politedissent.text.forEach(textObj => {
+							if (textObj && typeof textObj === 'object') {
+								Object.entries(textObj).forEach(([key, value]) => {
+									if (value && typeof value === 'string' && value.toLowerCase().includes(searchLower)) {
+										const snippet = extractSnippet(value, searchLower);
+										matches.push({field: `politedissent.${key}`, content: snippet, type: 'politedissent'});
+									}
+								});
+							}
+						});
+					}
+
+					// Search politedissent complaints
+					if (episode.politedissent?.complaints && typeof episode.politedissent.complaints === 'object') {
+						Object.entries(episode.politedissent.complaints).forEach(([category, complaints]) => {
+							if (complaints && Array.isArray(complaints)) {
+								complaints.forEach(complaint => {
+									if (complaint && typeof complaint === 'string' && complaint.toLowerCase().includes(searchLower)) {
+										const snippet = extractSnippet(complaint, searchLower);
+										matches.push({field: `complaint.${category}`, content: snippet, type: 'complaint'});
+									}
+								});
+							}
+						});
+					}
+
+					// Search housemdguide content
+					if (episode.housemdguide && typeof episode.housemdguide === 'object') {
+						const guideFields = ['patient', 'involvment', 'steps', 'diagnosis', 'diagnosis_origin'];
+						guideFields.forEach(field => {
+							if (episode.housemdguide[field] && typeof episode.housemdguide[field] === 'string' && episode.housemdguide[field].toLowerCase().includes(searchLower)) {
+								const snippet = extractSnippet(episode.housemdguide[field], searchLower);
+								matches.push({field: `housemdguide.${field}`, content: snippet, type: 'housemdguide'});
+							}
+						});
+
+						if (episode.housemdguide.additional && Array.isArray(episode.housemdguide.additional)) {
+							episode.housemdguide.additional.forEach(item => {
+								if (item && typeof item === 'string' && item.toLowerCase().includes(searchLower)) {
+									matches.push({field: 'housemdguide.additional', content: item, type: 'housemdguide'});
+								}
+							});
+						}
+					}
+
+					// Search arrays
+					const arrayFields = ['major_events', 'quotes'];
+					arrayFields.forEach(field => {
+						if (episode[field] && Array.isArray(episode[field])) {
+							episode[field].forEach(item => {
+								if (item && typeof item === 'string' && item.toLowerCase().includes(searchLower)) {
+									matches.push({field, content: item, type: 'array'});
+								}
+							});
+						}
+					});
+
+					if (matches.length > 0) {
+						const episodeIdx = getEpisodeIndex(seasonKey, episodeKey);
+						if (episodeIdx !== null) {
+							searchResults.push({
+								episodeIdx,
+								matches: matches.slice(0, 3) // Limit to 3 matches per episode
+							});
+						}
+					}
+				}
+			}
+
+			return searchResults;
+		}
+
+		function extractSnippet(text, searchTerm, maxLength = 150) {
+			const index = text.toLowerCase().indexOf(searchTerm.toLowerCase());
+			if (index === -1) return text.substring(0, maxLength) + '...';
+
+			const start = Math.max(0, index - 50);
+			const end = Math.min(text.length, index + searchTerm.length + 50);
+			let snippet = text.substring(start, end);
+
+			if (start > 0) snippet = '...' + snippet;
+			if (end < text.length) snippet = snippet + '...';
+
+			return snippet;
+		}
+
+		function getEpisodeIndex(seasonKey, episodeKey) {
+			// Find the index that corresponds to this season/episode
+			for (const [idx, season] of Object.entries(index.season)) {
+				if (season == seasonKey && index.episode[idx] == episodeKey) {
+					return idx;
+				}
+			}
+			return null;
+		}
+
 		function filter_episodes() {
 			let episodes = [];
 			for (const [idx, _] of Object.entries(index.episode)) {
 				episodes.push(idx);
 			};
+
+			// Apply search filter first
+			if (current_search.trim()) {
+				const searchResults = searchEpisodes(current_search);
+				episodes = searchResults.map(result => result.episodeIdx);
+			}
 
 			for (const [filter_type, filter_values] of Object.entries(current_filters)) {
 				if (filter_values.length == 0) continue;
@@ -167,6 +354,15 @@
 			let episode_list = document.getElementById("results");
 			episode_list.innerHTML = "";
 
+			// Show search results count
+			const searchCountEl = document.getElementById("search-results-count");
+			if (current_search.trim()) {
+				searchCountEl.textContent = `Found ${episodes.length} episodes matching "${current_search}"`;
+				searchCountEl.classList.remove("hidden");
+			} else {
+				searchCountEl.classList.add("hidden");
+			}
+
 			episodes.forEach((ep) => {
 				let season = index.season[ep];
 				let episode = index.episode[ep];
@@ -179,6 +375,25 @@
 				let meta = document.createElement("li");
 				meta.classList = "flex flex-row flex-nowrap items-center justify-between";
 				meta.innerHTML = `<div class="flex flex-row flex-nowrap items-center"><span class="font-bold mr-4 w-20">S${season}E${episode}</span><span><a href="./episodes/s${season}e${episode}.html">${title}</a></span></div>`;
+
+				// Add search snippets if this is a search result
+				if (current_search.trim()) {
+					const searchResults = searchEpisodes(current_search);
+					const episodeResult = searchResults.find(result => result.episodeIdx === ep);
+					if (episodeResult && episodeResult.matches.length > 0) {
+						let searchSnippets = document.createElement("div");
+						searchSnippets.classList = "my-4 text-sm text-gray-700 bg-yellow-50 p-4 rounded-md border-l-4 border-yellow-400";
+
+						episodeResult.matches.forEach(match => {
+							let snippet = document.createElement("div");
+							snippet.classList = "mb-3 last:mb-0";
+							snippet.innerHTML = `<span class="font-semibold text-blue-700 block mb-1">${getDisplayName(match.field)}:</span><span class="text-gray-800">${highlightSearchTerm(match.content, current_search)}</span>`;
+							searchSnippets.appendChild(snippet);
+						});
+
+						li.appendChild(searchSnippets);
+					}
+				}
 
 				let info = document.createElement("div");
 				info.classList = "mt-2 text-justify hidden";
@@ -235,6 +450,12 @@
 				li.appendChild(info);
 				episode_list.appendChild(li);
 			});
+		}
+
+		function highlightSearchTerm(text, searchTerm) {
+			if (!searchTerm.trim()) return text;
+			const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+			return text.replace(regex, '<mark class="bg-yellow-200">$1</mark>');
 		}
 
 		function update_heatmap(episodes) {
@@ -381,9 +602,6 @@
 			});
 		}
 
-		document.getElementById("filter-button").addEventListener('click', (e) => {
-			run_search();
-		});
 
 		document.getElementById("reset-button").addEventListener('click', (e) => {
 			current_filters = {
@@ -395,24 +613,45 @@
 				fields: [],
 				bodyparts: [],
 			};
+			current_search = "";
+			document.getElementById("search-input").value = "";
 			clear_filters();
+			run_search();
+		});
+
+		// Search input event listeners
+		const searchInput = document.getElementById("search-input");
+
+		// Only trigger search on Enter key
+		searchInput.addEventListener('keydown', (e) => {
+			if (e.key === 'Enter') {
+				current_search = e.target.value;
+				run_search();
+			}
+		});
+
+		// Update search when using the search button
+		document.getElementById("filter-button").addEventListener('click', (e) => {
+			current_search = searchInput.value;
 			run_search();
 		});
 
 		async function preloadJSONFiles() {
             try {
-                const [response1, response2] = await Promise.all([
+                const [response1, response2, response3] = await Promise.all([
                     fetch("./assets/filters.json"),
-                    fetch("./assets/index.json")
+                    fetch("./assets/index.json"),
+                    fetch("./assets/data.json")
                 ]);
 
-                if (!response1.ok || !response2.ok) {
+                if (!response1.ok || !response2.ok || !response3.ok) {
                     throw new Error('Network response was not ok');
                 }
 
                 const filters = await response1.json();
                 const index = await response2.json();
-                return { filters, index };
+                const episodeData = await response3.json();
+                return { filters, index, episodeData };
             } catch (error) {
                 console.error('Error fetching JSON files:', error);
             }
@@ -421,6 +660,7 @@
         preloadJSONFiles().then((data) => {
 			index = data.index;
 			filters = data.filters;
+			episodeData = data.episodeData;
 
 			// Initial Setup
 			setup_filters();

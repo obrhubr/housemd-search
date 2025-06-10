@@ -28,6 +28,7 @@ if __name__ == "__main__":
 	shutil.copytree(ASSETS_DIR, SITE_DIR + "/" + ASSETS_DIR)
 	shutil.copyfile(static.DATA_DIR + "/index.json", SITE_DIR + "/" + ASSETS_DIR + "/index.json")
 	shutil.copyfile(static.DATA_DIR + "/filters.json", SITE_DIR + "/" + ASSETS_DIR + "/filters.json")
+	shutil.copyfile(static.DATA_DIR + "/data.json", SITE_DIR + "/" + ASSETS_DIR + "/data.json")
 
 	# Build site
 	shutil.copyfile(static.TEMPLATE_DIR + "/index.html", SITE_DIR + "/index.html")
