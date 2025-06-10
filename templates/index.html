@@ -117,29 +117,23 @@
 
 		// Field name mapping for display
 		const fieldDisplayNames = {
-			'title': 'Title',
-			'director': 'Director',
-			'writer': 'Writer',
 			'guest_stars': 'Guest Stars',
 			'final_diagnosis': 'Final Diagnosis',
-			'cast': 'Cast',
 			'text.Summary': 'Episode Summary',
 			'text.Recap': 'Episode Recap',
 			'text.Clinic Patient': 'Clinic Patient',
-			'text.Zebra Factor 10/10': 'Medical Accuracy',
 			'text.Trivia & Cultural References': 'Trivia & References',
-			'politedissent.Main Content': 'Medical Review',
+			'major_events': 'Major Events',
+			'politedissent.Main Content': 'Politedissent Review',
 			'complaint.big': 'Major Medical Issues',
 			'complaint.medium': 'Medical Issues',
 			'complaint.nitpicks': 'Minor Medical Issues',
-			'housemdguide.patient': 'Patient',
-			'housemdguide.involvment': 'Case Origin',
-			'housemdguide.steps': 'Diagnostic Steps',
-			'housemdguide.diagnosis': 'Diagnosis',
-			'housemdguide.diagnosis_origin': 'Diagnosis Origin',
-			'housemdguide.additional': 'Additional Notes',
-			'major_events': 'Major Events',
-			'quotes': 'Quotes'
+			'housemdguide.patient': 'House M.D. Guide - Patient',
+			'housemdguide.involvment': 'House M.D. Guide - Case Origin',
+			'housemdguide.steps': 'House M.D. Guide - Diagnostic Steps',
+			'housemdguide.diagnosis': 'House M.D. Guide - Diagnosis',
+			'housemdguide.diagnosis_origin': 'House M.D. Guide - Diagnosis Origin',
+			'housemdguide.additional': 'House M.D. Guide - Additional Notes',
 		};
 
 		function getDisplayName(fieldName) {
@@ -178,7 +172,7 @@
 					const matches = [];
 
 					// Search basic fields
-					const basicFields = ['title', 'director', 'writer', 'guest_stars', 'final_diagnosis'];
+					const basicFields = ['title', 'guest_stars', 'final_diagnosis'];
 					basicFields.forEach(field => {
 						if (episode[field] && typeof episode[field] === 'string' && episode[field].toLowerCase().includes(searchLower)) {
 							matches.push({field, content: episode[field], type: 'basic'});
@@ -253,7 +247,7 @@
 					}
 
 					// Search arrays
-					const arrayFields = ['major_events', 'quotes'];
+					const arrayFields = ['major_events', 'quotes', 'guest_stars', 'final_diagnosis'];
 					arrayFields.forEach(field => {
 						if (episode[field] && Array.isArray(episode[field])) {
 							episode[field].forEach(item => {
